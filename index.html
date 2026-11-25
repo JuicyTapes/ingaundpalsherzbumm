@@ -106,6 +106,7 @@
   <div class="tools">
     <button class="pill" id="sleepbtn" aria-expanded="false"><svg viewBox="0 0 24 24"><path d="M21 14.5A9 9 0 0 1 9.5 3a9 9 0 1 0 11.5 11.5z"/></svg><span id="sleeplabel">Einschlafen</span></button>
     <button class="pill" id="offbtn"><svg viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2zM12 3v10.2l3.6-3.6L17 11l-5 5-5-5 1.4-1.4 3.6 3.6V3z"/></svg><span id="offlabel">Offline speichern</span></button>
+    <button class="pill" id="loopbtn" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg><span id="looplabel">Wiederholen: aus</span></button>
     <a class="pill" href="hoerbuch_komplett.mp3" download="Inga_und_Pal_Hoerbuch.mp3"><svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v6a3 3 0 0 0 3 3h1v-8H5v-1a7 7 0 0 1 14 0v1h-2v8h1a3 3 0 0 0 3-3v-6a9 9 0 0 0-9-9z"/></svg>Ganze MP3</a>
   </div>
   <div class="menu" id="sleepmenu" hidden>
@@ -184,7 +185,15 @@
   $('fwd').onclick=function(){ a.currentTime=Math.min(a.duration||1e9,a.currentTime+15) };
   a.addEventListener('play',function(){setIcon(true)});
   a.addEventListener('pause',function(){setIcon(false)});
-  a.addEventListener('ended',function(){ if(cur<K.length-1) go(cur+1,true); else { setIcon(false); go(0,false); } });
+  var loopOn=(load('hb_loop')==='1');
+  function loopUi(){ $('loopbtn').classList.toggle('on',loopOn); $('loopbtn').setAttribute('aria-pressed',String(loopOn)); $('looplabel').textContent=loopOn?'Wiederholen: an':'Wiederholen: aus'; }
+  $('loopbtn').onclick=function(){ loopOn=!loopOn; store('hb_loop',loopOn?'1':'0'); loopUi(); };
+  loopUi();
+  a.addEventListener('ended',function(){
+    if(cur<K.length-1) go(cur+1,true);
+    else if(loopOn) go(0,true);            // Ende erreicht: wieder von vorne
+    else { setIcon(false); go(0,false); }
+  });
   a.addEventListener('timeupdate',function(){
     if(!seeking && a.duration){ $('seek').value=Math.round(a.currentTime/a.duration*1000); }
     $('cur').textContent=fmt(a.currentTime);
